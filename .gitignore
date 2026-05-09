@@ -1,0 +1,83 @@
+# ─── Secrets & local config ──────────────────────────────────
+# 絶対にコミットしない。`.env.example` のみコミット。
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+
+# ─── Dependencies ────────────────────────────────────────────
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/install-state.gz
+
+# ─── Build / generated output ────────────────────────────────
+# 生成されたスライド画像。再現可能なのでコミット不要。
+# 評価提出用などで残したい場合は examples/ 以下に手動でコピー。
+output/
+dist/
+build/
+.next/
+.cache/
+.parcel-cache/
+
+# ─── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+_render.log.json
+_generation.log
+
+# ─── OS ──────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─── IDE / Editor ────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ─── Claude Code ─────────────────────────────────────────────
+# 個人設定（permissions など）はコミットしない。
+# `.claude/settings.json` のチーム共有が必要ならホワイトリストで明示。
+.claude/settings.local.json
+.claude/.credentials.json
+.claude/cache/
+.claude/projects/
+
+# ─── Puppeteer / Chromium キャッシュ ──────────────────────────
+.cache/puppeteer/
+
+# ─── Test / coverage ─────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# ─── Temp / scratch ──────────────────────────────────────────
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+.scratch/

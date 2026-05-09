@@ -1,0 +1,145 @@
+{
+  "deck_id": "cc-bootcamp",
+  "description": "Claude Code 7day ブートキャンプ 販売スライド (10枚・既定)",
+  "type": "series",
+  "style_base": "bootcamp",
+  "style_description": "プレミアムなコース・ローンチの空気感。深いネイビー#0B1020背景に、白の極太タイポグラフィを主役に据え、ゴールド#FFB72Bの細い下線・数字ハイライトで権威性を演出。SaaS/EC系セールス資料のトーン(Stripe + Linear + Anthropic)。安っぽいギラギラ感や無料情報商材的な装飾は排除し、Apple Keynote級の洗練を保つ。日本語と英数字の混植で、数字(¥198,000・4,500万円・7日間など)を視覚の主役に置く。",
+  "preset": "presentation",
+  "images": [
+    {
+      "layout": "cover",
+      "purpose": "表紙。受講検討者の最初の3秒を掴むカバー。中央〜左寄せに巨大な極太タイトル「日本語で話しかけるだけで、月10万円。」、その下にサブタイトル、画面下部に小さくシリーズ名と日付。背景は深いネイビーで、右上にゴールドの細いラインアクセントのみ。アイコンや人物写真は一切使わず、タイポグラフィのみで「これは安っぽい商品ではない」と即座に伝える。",
+      "text": {
+        "main": "日本語で話しかけるだけで、月10万円。",
+        "sub": "本質のClaude Code 完全攻略 7dayブートキャンプ",
+        "other": ["第2期 募集開始", "アドネス株式会社"]
+      },
+      "note": "Layout: left-aligned hero typography occupying 70% of canvas. Tiny gold horizontal rule above the main title. No imagery, no icons, no decorative shapes."
+    },
+    {
+      "layout": "three-col-numbered",
+      "purpose": "問題提起のスライド。「あなたの仕事の80%は、もうAIに任せられる」というギャップを突きつける。3つの繰り返し作業(資料作成・リサーチ・SNS投稿)を等間隔の3カラムで横並びに配置し、それぞれ短いラベルだけ置く。各カラムの上に細いゴールドのナンバリング(01/02/03)。視聴者に「あ、自分のことだ」と即座に思わせる。",
+      "text": {
+        "main": "あなたの仕事の8割は、もうAIに任せられる。",
+        "sub": "毎日くり返している、この3つの作業に心当たりはありますか?",
+        "other": ["01  資料作成", "02  リサーチ", "03  SNS投稿"]
+      },
+      "note": "Layout: headline top 30%, then 3 equal columns horizontally with 01/02/03 numbering. The category labels are large, with ample whitespace between columns. No icons."
+    },
+    {
+      "layout": "hero-number",
+      "purpose": "「なぜ今か」を示す決定的データのスライド。中央に巨大な数字「0.1%」を画面の主役として配置し、その下に短い説明文を一行だけ添える。日本ではほぼ誰も使いこなしていない=今が圧倒的な先行者利益の時期、という認識を即座に植え付ける。背景の余白は極力多く、数字以外の装飾は禁止。",
+      "text": {
+        "main": "0.1%",
+        "sub": "Claude Code を仕事で使いこなしている日本人の推定割合。",
+        "other": ["つまり、今動けば、あなたは上位0.1%側に立てる。"]
+      },
+      "note": "Layout: gigantic '0.1%' as the central hero element occupying 40% of canvas height in gold #FFB72B. Subtitle below in white, smaller. Single-line caption at bottom. Extreme whitespace."
+    },
+    {
+      "layout": "2x2-grid",
+      "purpose": "ソリューション提示。Claude Code が何をしてくれるかを4枚のミニマムなブロックで提示する。2x2グリッドで「コード生成」「資料作成」「業務自動化」「データ分析」を配置。各ブロックに短い動詞ベースの説明1行のみ。アイコンは使わず、ナンバリングと太字のラベルで構造を作る。視聴者に「これが手に入る具体的な能力だ」と理解させる。",
+      "text": {
+        "main": "Claude Code は、あなたの第二の頭脳になる。",
+        "sub": "話しかけるだけで、4つの仕事を同時に片付ける。",
+        "other": [
+          "01  コードを書く",
+          "02  資料・スライドを作る",
+          "03  業務を自動化する",
+          "04  データを分析する"
+        ]
+      },
+      "note": "Layout: title top, then a clean 2x2 grid of four labeled blocks separated by hairline gold dividers. Each block has the number, the verb-based label, and ample whitespace. No card backgrounds, no shadows."
+    },
+    {
+      "layout": "split-hero-number",
+      "purpose": "信頼性・権威性のスライド。講師の実績で一気に信頼を確立する。最大の数字「4,500万円」を画面左の主役にし、右側に小さく「初月売上 / 4人で達成」のキャプション。下部に細いラベルで他の実績を3つだけ箇条書き。数字の説得力で、これがホンモノであることを伝える。",
+      "text": {
+        "main": "初月売上、4,500万円。",
+        "sub": "教えるのは、今まさにAIで稼ぎ続けている現役プレイヤーです。",
+        "other": [
+          "未経験から100個以上のシステムを構築",
+          "営業初月で1,000万円の案件を獲得",
+          "120人のコミュニティ運営をAIで自動化"
+        ]
+      },
+      "note": "Layout: split layout. Left 55% = giant '4,500万円' numerical hero in gold. Right 45% = subtitle + 3-line evidence list with thin gold bullets. Hairline vertical divider between."
+    },
+    {
+      "layout": "three-col-priced",
+      "purpose": "本体パッケージ提示のスライド。受け取れる3つの構成要素を3カラムで明示する。各カラムに「①講義」「②コミュニティ」「③ブートキャンプ」のラベルと、相当額(¥349,000 / ¥100,000 / ¥200,000)を中サイズで配置。価値の合計が ¥649,000 相当であることを下部に明記。安心感とパッケージの厚みを伝える。",
+      "text": {
+        "main": "あなたが手に入れる、3つの構成要素。",
+        "sub": "ブートキャンプ本体だけで、相当価値 ¥649,000。",
+        "other": [
+          "① 講義  ¥349,000",
+          "② 専用コミュニティ  ¥100,000",
+          "③ ブートキャンプ全4回  ¥200,000"
+        ]
+      },
+      "note": "Layout: title top. Then 3 equal columns. Each column shows the number, label, and the price prominently in white-bold with subtle gold underline. Total '¥649,000' should appear once under the columns as a quiet footer."
+    },
+    {
+      "layout": "two-col-list",
+      "purpose": "カリキュラムの厚みを伝えるスライド。13のテーマを2カラムでリスト表示し、毎週新しいテーマが追加されていく事実を強調。リストは番号付きで密度高めに、しかしフォントは整っていて品がある状態を保つ。「毎週増え続けるカリキュラム」という見出しで、買った後も価値が増え続ける安心感を作る。",
+      "text": {
+        "main": "毎週、新しいテーマが追加される。",
+        "sub": "ローンチ時点の全13テーマ。受講後も追加費用は一切なし。",
+        "other": [
+          "01  はじめてのClaude Code",
+          "02  AIエージェント × LP制作",
+          "03  AIエージェント × 案件探索",
+          "04  AIエージェント × スライド制作",
+          "05  AIエージェント × X投稿",
+          "06  AIエージェント × オプチャ運営",
+          "07  AIエージェント × 動画編集",
+          "08  AIエージェント × LINE Bot",
+          "09  AIエージェント × システム開発",
+          "10  SEO記事生成",
+          "11  AI記事リライト",
+          "12  PPTX自動作成",
+          "13  URL一括PDF変換"
+        ]
+      },
+      "note": "Layout: title top 25%. Two equal columns listing 7+6 numbered items respectively with monospace-feel numbering. Tight line height but ample column gap. The whole list reads like a Notion document index."
+    },
+    {
+      "layout": "hero-number-list",
+      "purpose": "特典の威力を伝えるスライド。「2期生限定特典」を3つの数字でインパクト勝負させる。中央に「¥1,836,000」の合計相当額、その下に「特典12システム + 1on1コンサル + 1ヶ月補講」と内訳を3行で。下部に「アドネスが実際の業務で毎日使っているシステムを、そのまま渡します」というキラーコピーを添える。",
+      "text": {
+        "main": "2期生限定、特典 ¥1,836,000 相当。",
+        "sub": "アドネスが日々使う社内システム12種を、そのまま手渡しします。",
+        "other": [
+          "特典① 社内専用システム12種  ¥1,736,000",
+          "特典② 1on1コンサル(2時間)  ¥50,000",
+          "特典③ 1ヶ月の補講サポート  ¥50,000"
+        ]
+      },
+      "note": "Layout: title top. Below it, gigantic '¥1,836,000' centered as a hero number in gold. Then 3 small evidence rows in white. Hairline gold rule between hero and rows."
+    },
+    {
+      "layout": "price-contrast",
+      "purpose": "価格と価値ギャップを示す決定スライド。左に「¥2,485,000 相当」、中央にゴールドの大きな矢印、右に巨大な「¥198,000(税抜)」を配置。視覚的に「価値の差がここまである」と直感的に伝える。画面下部に小さく「分割で月々約7,532円〜 / 1日あたり約251円」を添え、心理的ハードルを下げる。",
+      "text": {
+        "main": "受け取る価値 ¥2,485,000 → 投資 ¥198,000。",
+        "sub": "10万円の案件を2件取れば、もう全額回収できます。",
+        "other": [
+          "クレカ一括 / 銀行振込一括 ¥212,800",
+          "分割 月々 約¥7,532〜",
+          "1日あたり 約¥251"
+        ]
+      },
+      "note": "Layout: 3-column horizontal flow. Left: '¥2,485,000 相当' in muted white. Center: a single thin gold horizontal arrow '→' as the visual hinge. Right: '¥198,000' in giant bold gold. Footer row of 3 payment options below in small text."
+    },
+    {
+      "layout": "cta",
+      "purpose": "クロージング/CTAスライド。「7日後の自分はどうなっているか」を一行で約束し、その下に大きく行動を促すラベル「今すぐ参加する」を配置。煽り立てるのではなく、静かな決意を促すトーン。下部に控えめに開催日とサポート期間を記載。",
+      "text": {
+        "main": "7日後、あなたは案件を取れるエンジニアになる。",
+        "sub": "プログラミング未経験から、月10万円の案件獲得まで。",
+        "other": ["お申し込みはこちら", "ブートキャンプ週: 月・水・金・土 21:00開始", "補講期間 1ヶ月 / 質問し放題"]
+      },
+      "note": "Layout: hero headline top-center occupying 35% of canvas. A single thin gold underline beneath it. Below: subtitle, then a quiet CTA label 'お申し込みはこちら' set in regular weight (NOT a button shape). Footer row with schedule details. No icons."
+    }
+  ]
+}

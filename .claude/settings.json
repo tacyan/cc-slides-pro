@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(node engine/render-html.js --list-layouts)",
+      "Bash(node engine/render-html.js --template *)",
+      "Bash(node engine/render-html.js *)",
+      "Bash(git init)",
+      "Bash(git add *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(open ./output/*)",
+      "Edit(/.claude/skills/cc-slides-pro/**)"
+    ]
+  }
+}

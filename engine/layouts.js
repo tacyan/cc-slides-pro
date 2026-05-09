@@ -27,6 +27,44 @@ function splitPriced(item) {
   return { num: "", label: String(item), price: "" };
 }
 
+function splitHeroNumberText(main) {
+  const mainStr = String(main || "");
+  const heroPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d.]+\s*%)/;
+  const heroMatch = mainStr.match(heroPattern);
+  if (!heroMatch) return { heroNum: "", headTxt: mainStr };
+  const heroNum = heroMatch[1].replace(/\s+/g, "");
+  const headTxt = mainStr
+    .replace(heroMatch[0], "")
+    .replace(/^[、。.,\sの]+|[、。.,\s]+$/g, "")
+    .trim();
+  return { heroNum, headTxt };
+}
+
+function fitHeroFontSize(text, max = 200, min = 72) {
+  const len = Array.from(String(text || "")).length;
+  if (len <= 6) return max;
+  return Math.max(min, Math.floor(max - (len - 6) * 16));
+}
+
+function splitMetricText(main) {
+  const mainStr = String(main || "");
+  const metricPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d,.]+\s*%)/;
+  const metricMatch = mainStr.match(metricPattern);
+  if (!metricMatch) return { kicker: mainStr, hero: "" };
+  const hero = metricMatch[1].replace(/\s+/g, "");
+  const kicker = mainStr
+    .replace(metricMatch[0], "")
+    .replace(/[、。.,!?！？]+/g, " ")
+    .trim();
+  return { kicker, hero };
+}
+
+function fitSplitHeroFontSize(text) {
+  const len = Array.from(String(text || "")).length;
+  if (len <= 6) return 148;
+  return Math.max(76, 148 - (len - 6) * 12);
+}
+
 // =============================================================
 // LAYOUT: cover  (1枚目用 ヒーローカバー)
 // =============================================================
@@ -155,26 +193,17 @@ export function layout2x2Grid({ main, sub, other }, t) {
 // LAYOUT: split-hero-number (5枚目: 左ヒーロー数字 + 右リスト)
 // =============================================================
 export function layoutSplitHeroNumber({ main, sub, other }, t) {
-  // main から数字フレーズ (¥xxx / xxx万円 / xxx%) を抜き出してヒーローに
+  // main から数字フレーズ (¥xxx / xxx万円 / 30分 / xxx%) を抜き出してヒーローに
   // 残りの前置きを kicker に。例: "初月売上、4,500万円。" → kicker:"初月売上" hero:"4,500万円"
-  const mainStr = String(main || "");
-  const numMatch = mainStr.match(/(¥[\d,]+|[\d,]+\s*万円|[\d,]+\s*億円|[\d,.]+\s*%)/);
-  let kicker = "";
-  let hero = mainStr;
-  if (numMatch) {
-    hero = numMatch[1].replace(/\s+/g, "");
-    kicker = mainStr
-      .replace(numMatch[0], "")
-      .replace(/[、。.,!?！？]+/g, " ")
-      .trim();
-  }
+  const { kicker, hero } = splitMetricText(main);
+  const heroBlock = hero ? `<div class="hero" style="font-size:${fitSplitHeroFontSize(hero)}px">${esc(hero)}</div>` : "";
 
   const list = (other || []).map(it => `<li>${esc(it)}</li>`).join("");
   return `
   <div class="wrap">
     <div class="left">
       ${kicker ? `<div class="kicker">${esc(kicker)}</div>` : ""}
-      <div class="hero">${esc(hero)}</div>
+      ${heroBlock}
     </div>
     <div class="divider"></div>
     <div class="right">
@@ -186,7 +215,7 @@ export function layoutSplitHeroNumber({ main, sub, other }, t) {
     .wrap{position:absolute;inset:0;display:grid;grid-template-columns:1.05fr 1px 0.95fr;padding:8%;gap:80px;align-items:center}
     .left{display:flex;flex-direction:column;gap:24px;min-width:0}
     .kicker{font-family:${t.fontNum};font-weight:600;font-size:22px;letter-spacing:0.18em;color:${t.accent}}
-    .hero{font-family:${t.fontNum};font-weight:900;font-size:148px;line-height:0.95;letter-spacing:-0.04em;color:${t.accent};white-space:nowrap}
+    .hero{font-family:${t.fontNum};font-weight:900;line-height:0.95;letter-spacing:-0.04em;color:${t.accent};white-space:nowrap;max-width:100%;overflow-wrap:anywhere}
     .divider{background:${t.rule};width:1px;height:60%;justify-self:center}
     .right{display:flex;flex-direction:column;gap:28px}
     .sub{font-family:${t.fontBody};font-weight:600;font-size:26px;color:${t.fg};margin:0;line-height:1.45}
@@ -270,15 +299,11 @@ export function layoutTwoColList({ main, sub, other }, t) {
 // LAYOUT: hero-number-list (8枚目: 巨大金額 + 内訳3行)
 // =============================================================
 export function layoutHeroNumberList({ main, sub, other }, t) {
-  // mainからヒーロー数字と見出しを分離。¥金額 / 日間 / ヶ月 / 名 等にも対応
+  // mainからヒーロー数字と見出しを分離。¥金額 / 日間 / ヶ月 / 名 / 枚 等にも対応
   // 例: main="2期生限定、特典 ¥1,836,000 相当。" → hero="¥1,836,000"
   // 例: main="30日間、全額返金保証。"          → hero="30日間"
-  const heroPattern = /(¥[\d,]+|[\d,]+\s*(?:日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|万円|億円)|[\d.]+\s*%)/;
-  const heroMatch = main.match(heroPattern);
-  const heroNum = heroMatch ? heroMatch[1].replace(/\s+/g, "") : main;
-  const headTxt = heroMatch
-    ? main.replace(heroMatch[0], "").replace(/^[、。.,\s]+|[、。.,\s]+$/g, "").trim()
-    : "";
+  const { heroNum, headTxt } = splitHeroNumberText(main);
+  const heroBlock = heroNum ? `<div class="hero" style="font-size:${fitHeroFontSize(heroNum)}px">${esc(heroNum)}</div>` : "";
   const rows = (other || []).map(it => {
     const m = String(it).match(/^(.+?)\s+(¥[\d,]+)\s*$/);
     if (m) return `<li><span class="lab">${esc(m[1])}</span><span class="prc">${esc(m[2])}</span></li>`;
@@ -290,7 +315,7 @@ export function layoutHeroNumberList({ main, sub, other }, t) {
       <h1>${esc(headTxt)}</h1>
       <p>${esc(sub)}</p>
     </header>
-    <div class="hero">${esc(heroNum)}</div>
+    ${heroBlock}
     <div class="rule"></div>
     <ul class="rows">${rows}</ul>
   </div>
@@ -299,7 +324,7 @@ export function layoutHeroNumberList({ main, sub, other }, t) {
     header{max-width:100%}
     header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:46px;line-height:1.25;color:${t.fg};margin:0 0 12px}
     header p{font-family:${t.fontBody};font-size:20px;color:${t.muted};margin:0}
-    .hero{font-family:${t.fontNum};font-weight:900;font-size:200px;line-height:1;letter-spacing:-0.04em;color:${t.accent};margin:8px 0}
+    .hero{font-family:${t.fontNum};font-weight:900;line-height:1;letter-spacing:-0.04em;color:${t.accent};margin:8px 0;max-width:92%;overflow-wrap:anywhere}
     .rule{width:80px;height:2px;background:${t.accent};margin:0 auto}
     .rows{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px;width:780px;max-width:90%}
     .rows li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid ${t.rule}}

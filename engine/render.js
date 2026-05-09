@@ -157,8 +157,58 @@ async function renderOne(browser, html, outPath, size) {
   await page.evaluate(async () => {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
   });
+  await assertNoViewportOverflow(page, outPath);
   await page.screenshot({ path: outPath, type: "png", fullPage: false, clip: { x: 0, y: 0, width: size.w, height: size.h } });
   await page.close();
+}
+
+async function assertNoViewportOverflow(page, outPath) {
+  const overflow = await page.evaluate(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const tolerance = 2;
+    const nodes = [...document.body.querySelectorAll("*")];
+    const offenders = [];
+
+    for (const el of nodes) {
+      const style = window.getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) continue;
+
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) continue;
+
+      const hasText = (el.textContent || "").trim().length > 0;
+      const isRule = rect.height <= 3 || rect.width <= 3;
+      if (!hasText && isRule) continue;
+
+      const out =
+        rect.left < -tolerance ||
+        rect.top < -tolerance ||
+        rect.right > vw + tolerance ||
+        rect.bottom > vh + tolerance;
+
+      if (out) {
+        offenders.push({
+          tag: el.tagName.toLowerCase(),
+          className: String(el.className || ""),
+          text: (el.textContent || "").trim().slice(0, 80),
+          rect: {
+            left: Math.round(rect.left),
+            top: Math.round(rect.top),
+            right: Math.round(rect.right),
+            bottom: Math.round(rect.bottom),
+          },
+        });
+      }
+    }
+
+    return offenders.slice(0, 5);
+  });
+
+  if (overflow.length) {
+    const target = path.basename(outPath);
+    throw new Error(`Viewport overflow detected in ${target}: ${JSON.stringify(overflow)}`);
+  }
 }
 
 // ─── CLI ──────────────────────────────────────────────────────

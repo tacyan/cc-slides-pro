@@ -50,6 +50,41 @@ function splitPriced(item) {
   return { num: "", label: String(item), price: "" };
 }
 
+function splitHeroNumberText(main) {
+  const mainStr = String(main || "");
+  const heroPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d.]+\s*%)/;
+  const heroMatch = mainStr.match(heroPattern);
+  if (!heroMatch) return { heroNum: "", headTxt: mainStr };
+  const heroNum = heroMatch[1].replace(/\s+/g, "");
+  const headTxt = mainStr
+    .replace(heroMatch[0], "")
+    .replace(/^[、。.,\sの]+|[、。.,\s]+$/g, "")
+    .trim();
+  return { heroNum, headTxt };
+}
+
+function fitHeroFontSize(text, max = 130, min = 44) {
+  const len = Array.from(String(text || "")).length;
+  if (len <= 6) return max;
+  return Math.max(min, Math.floor(max - (len - 6) * 10));
+}
+
+function splitMetricText(main) {
+  const mainStr = String(main || "");
+  const metricPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d,.]+\s*%)/;
+  const metricMatch = mainStr.match(metricPattern);
+  if (!metricMatch) return { kicker: mainStr, hero: "" };
+  const hero = metricMatch[1].replace(/\s+/g, "");
+  const kicker = mainStr.replace(metricMatch[0], "").replace(/[、。.,!?！？]+/g, " ").trim();
+  return { kicker, hero };
+}
+
+function fitSplitHeroFontSize(text) {
+  const len = Array.from(String(text || "")).length;
+  if (len <= 6) return 96;
+  return Math.max(44, 96 - (len - 6) * 8);
+}
+
 // ─── 共通フッター(ページ番号・デッキ名・横線) ───────────────────
 export function addFrame(slide, t, { idx, total, deck }) {
   // 下のヘアライン (rule)
@@ -235,14 +270,7 @@ export function pptx2x2Grid(slide, { main, sub, other }, t) {
 // =============================================================
 export function pptxSplitHeroNumber(slide, { main, sub, other }, t) {
   // main から金額/数字を抽出
-  const mainStr = String(main || "");
-  const numMatch = mainStr.match(/(¥[\d,]+|[\d,]+\s*万円|[\d,]+\s*億円|[\d,.]+\s*%)/);
-  let kicker = "";
-  let hero = mainStr;
-  if (numMatch) {
-    hero = numMatch[1].replace(/\s+/g, "");
-    kicker = mainStr.replace(numMatch[0], "").replace(/[、。.,!?！？]+/g, " ").trim();
-  }
+  const { kicker, hero } = splitMetricText(main);
 
   // 左:キッカー + ヒーロー数字
   if (kicker) {
@@ -252,11 +280,14 @@ export function pptxSplitHeroNumber(slide, { main, sub, other }, t) {
       color: hex(t.accent), charSpacing: 4,
     });
   }
-  slide.addText(hero, {
-    x: "9%", y: "44%", w: "40%", h: "20%",
-    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 96,
-    color: hex(t.accent), valign: "middle",
-  });
+  if (hero) {
+    slide.addText(hero, {
+      x: "9%", y: "44%", w: "40%", h: "20%",
+      fontFace: resolveFont(t.fontNum), bold: true, fontSize: fitSplitHeroFontSize(hero),
+      color: hex(t.accent), valign: "middle",
+      fit: "shrink",
+    });
+  }
   // 中央の縦ライン
   slide.addShape("line", {
     x: "50%", y: "30%", w: 0, h: "40%",
@@ -375,13 +406,7 @@ export function pptxTwoColList(slide, { main, sub, other }, t) {
 // LAYOUT: hero-number-list
 // =============================================================
 export function pptxHeroNumberList(slide, { main, sub, other }, t) {
-  const mainStr = String(main || "");
-  const heroPattern = /(¥[\d,]+|[\d,]+\s*(?:日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|万円|億円)|[\d.]+\s*%)/;
-  const heroMatch = mainStr.match(heroPattern);
-  const heroNum = heroMatch ? heroMatch[1].replace(/\s+/g, "") : mainStr;
-  const headTxt = heroMatch
-    ? mainStr.replace(heroMatch[0], "").replace(/^[、。.,\s]+|[、。.,\s]+$/g, "").trim()
-    : "";
+  const { heroNum, headTxt } = splitHeroNumberText(main);
 
   if (headTxt) {
     slide.addText(headTxt, {
@@ -398,11 +423,14 @@ export function pptxHeroNumberList(slide, { main, sub, other }, t) {
     });
   }
   // ヒーロー金額
-  slide.addText(heroNum, {
-    x: "8%", y: "22%", w: "84%", h: "26%",
-    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 130,
-    color: hex(t.accent), align: "center", valign: "middle",
-  });
+  if (heroNum) {
+    slide.addText(heroNum, {
+      x: "8%", y: "22%", w: "84%", h: "26%",
+      fontFace: resolveFont(t.fontNum), bold: true, fontSize: fitHeroFontSize(heroNum),
+      color: hex(t.accent), align: "center", valign: "middle",
+      fit: "shrink",
+    });
+  }
   // 区切り線
   slide.addShape("line", {
     x: "47%", y: "53%", w: "6%", h: 0,

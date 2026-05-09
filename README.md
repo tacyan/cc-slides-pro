@@ -1,105 +1,226 @@
 # cc-slides-pro
 
-> Claude Code に話しかけるだけで、販売現場で使えるレベルのスライドを **PNG 画像 + 編集可能な PPTX** で自動生成する。
+Claude Code に話しかけるだけで、スライドを **PNG 画像** と **編集できる PowerPoint ファイル(PPTX)** で作れるツールです。
 
-外部 API キー不要・課金ゼロ・完全オフライン動作。**スライド枚数は無制限**(JSON テンプレートの `images` 配列の長さがそのまま反映)。HTML + headless Chromium で PNG 画像を、pptxgenjs で **PowerPoint / Keynote / Google Slides で本文を直接書き換え可能なネイティブ PPTX** を出力します。
+プログラミング経験がなくても、下の手順どおりに進めれば使えます。外部 API キー、クレジットカード登録、追加課金は不要です。
 
-## 30秒で使う
+## これで何ができますか？
+
+- スライド画像をまとめて作れます
+- PowerPoint / Keynote / Google Slides で編集できる PPTX を作れます
+- Claude Code に「この内容でスライドを作って」と頼めます
+- すでに用意されているテンプレートから、すぐにサンプルを生成できます
+
+## まず必要なもの
+
+最初に、次の2つを用意してください。
+
+| 必要なもの | 何に使うか | 入手先 |
+|---|---|---|
+| Node.js | スライドを作るための実行環境 | https://nodejs.org/ |
+| Claude Code | AI に作業を頼むためのツール | https://docs.anthropic.com/claude-code |
+
+Node.js は **LTS** と書かれている版を選んでください。
+
+Claude Code を使わず、手動コマンドだけで生成することもできます。その場合も Node.js は必要です。
+
+## いちばん簡単な始め方
+
+### 1. このプロジェクトをダウンロードする
+
+GitHub の画面で、次の順番にクリックします。
+
+1. 緑色の **Code** ボタンをクリック
+2. **Download ZIP** をクリック
+3. ダウンロードした ZIP ファイルを開く
+4. 出てきたフォルダを、わかりやすい場所に移動する
+
+例:
+
+- Mac: `Downloads` や `Documents`
+- Windows: `ダウンロード` や `ドキュメント`
+
+### 2. ターミナルを開く
+
+Mac の場合:
+
+1. `ターミナル` アプリを開く
+2. プロジェクトのフォルダをターミナルにドラッグします
+3. 表示されたパスの前に `cd ` を付けて Enter を押します
+
+例:
 
 ```bash
-# 1. 依存インストール (初回のみ)
-cd engine && npm install && cd ..
+cd /Users/your-name/Downloads/cc-slides-pro
+```
 
-# 2. 一気に PNG + PPTX 生成
+Windows の場合:
+
+1. プロジェクトのフォルダを開く
+2. フォルダ内の何もない場所で右クリック
+3. **ターミナルで開く** または **PowerShell で開く** を選びます
+
+### 3. 初回だけ準備する
+
+ターミナルで次を入力して Enter を押します。
+
+```bash
+npm install --prefix engine
+```
+
+`engine` は「スライドを作るプログラムが入っているフォルダ名」です。コマンドはそのままコピーすれば大丈夫です。
+
+初回は Chromium というブラウザ部品をダウンロードするため、少し時間がかかります。
+
+### 4. サンプルスライドを作る
+
+次を入力して Enter を押します。
+
+```bash
 node engine/render.js --template cc-bootcamp
 ```
 
-`output/cc-bootcamp/` に以下が**約7秒**で出力されます:
+完了すると、次の場所にファイルができます。
 
-```
-slide-01.png 〜 slide-10.png       ← 1920x1080 高解像度PNG
-cc-bootcamp.pptx                    ← PowerPoint/Keynote で開けば即編集可能
+```text
+output/cc-bootcamp/
 ```
 
-## 出力形式の使い分け
+中には次のようなファイルが入っています。
+
+```text
+slide-01.png
+slide-02.png
+...
+cc-bootcamp.pptx
+```
+
+`slide-01.png` などは画像ファイルです。`cc-bootcamp.pptx` は PowerPoint などで編集できます。
+
+## Claude Code で使う方法
+
+Claude Code を開いて、このプロジェクトのフォルダで作業します。
+
+あとは、次のように依頼してください。
+
+```text
+Claude Code初心者向けの説明スライドを作って
+```
+
+```text
+自社サービスの営業資料を10枚で作って。PPTXも欲しい
+```
+
+```text
+3枚目だけ、もっと初心者向けの言葉に直して
+```
+
+このプロジェクトには Claude Code 用の説明ファイル `CLAUDE.md` が入っています。Claude Code はその内容を見ながら、テンプレート編集やスライド生成を進められます。
+
+## すでに入っているテンプレート
+
+| テンプレート名 | 内容 | 生成コマンド |
+|---|---|---|
+| `cc-bootcamp` | 10枚のサンプルスライド | `node engine/render.js --template cc-bootcamp` |
+| `cc-bootcamp-extended` | 13枚の長めのサンプル | `node engine/render.js --template cc-bootcamp-extended` |
+| `claude-code-organization-beginner` | Claude Code 組織導入の初心者向け資料 | `node engine/render.js --template claude-code-organization-beginner` |
+
+## よく使うコマンド
+
+PNG と PPTX の両方を作る:
 
 ```bash
-node engine/render.js --template cc-bootcamp                   # 既定: PNG + PPTX 両方
-node engine/render.js --template cc-bootcamp --format png      # PNG のみ
-node engine/render.js --template cc-bootcamp --format pptx     # PPTX のみ
-node engine/render.js --template cc-bootcamp --format both     # 両方 (明示指定)
+node engine/render.js --template cc-bootcamp
 ```
 
-## PPTX の編集可能性
-
-生成された PPTX は **すべての文字列がネイティブテキストボックス**として保存されます。画像化・図形化されません。
-
-- PowerPoint で開く → クリックして即編集
-- Keynote で開く → クリックして即編集
-- Google Slides にアップロード → クリックして即編集
-- フォント・色・位置も全て調整可能
-
-## Claude Code から使う
-
-このプロジェクトは Claude Code の SKILL として登録済みです。
-
-```
-あなた: ブートキャンプのスライド作って
-あなた: 自社サービスの12枚スライド、Anthropic風で作って
-あなた: 3枚目だけ作り直して
-あなた: PPTXだけ欲しい
-```
-
-詳細は [CLAUDE.md](CLAUDE.md) を参照。
-
-## 主な機能
-
-- **完全無料・APIキー不要**: ローカルの Headless Chromium + pptxgenjs
-- **スライド枚数無制限**: 10枚 / 13枚 / 30枚どんなデッキでも OK ([cc-bootcamp.json](templates/cc-bootcamp.json) は10枚版、[cc-bootcamp-extended.json](templates/cc-bootcamp-extended.json) は13枚版)
-- **2形式同時出力**: PNG (高解像度画像) + PPTX (編集可能スライド)
-- **15種のスタイル**: bootcamp / stripe / apple / anthropic / linear / vercel / mckinsey / notion / google / figma / netflix / canva / nike / muji / bootcamp_light
-- **6種のフォーマット**: presentation / video-slide / doc-slide / thumbnail / sns-square / sns-story
-- **10種のレイアウト**: cover / hero-number / 2x2-grid / split-hero-number / three-col-numbered / three-col-priced / two-col-list / hero-number-list / price-contrast / cta
-- **部分再生成**: `--only 3,7` のような指定で個別 PNG だけ作り直せる
-- **スタイル上書き**: `--style anthropic` で全スタイルを切替
-
-## CLI オプション
+PNG 画像だけ作る:
 
 ```bash
-node engine/render.js --template <deck_id> [options]
-
-  --template <id>     templates/<id>.json を読み込む
-  --format <type>     png / pptx / both  (既定: both)
-  --only 3,7          指定スライドのみ PNG 再生成 (例: 1-3 / 1,4,7)
-  --style <name>      スタイル上書き (bootcamp / anthropic / apple / ...)
-  --no-open           生成後にフォルダを開かない
-  --list-layouts      利用可能レイアウト一覧
+node engine/render.js --template cc-bootcamp --format png
 ```
 
-## 必要環境
+PPTX だけ作る:
 
-- Node.js >= 18
-- 初回 `npm install` 時に Puppeteer が Chromium をダウンロード (約 170MB)
+```bash
+node engine/render.js --template cc-bootcamp --format pptx
+```
 
-## ドキュメント
+3枚目だけ画像を作り直す:
 
-- [CLAUDE.md](CLAUDE.md) — Claude Code 用スキル定義 + 全フロー
-- [templates/](templates/) — デッキ定義 JSON
-- [engine/layouts.js](engine/layouts.js) — HTML/CSS レイアウト関数 (PNG用)
-- [engine/pptx-layouts.js](engine/pptx-layouts.js) — PPTX レイアウト関数 (編集可能テキスト)
-- [engine/style-tokens.js](engine/style-tokens.js) — スタイル別 CSS / 色トークン
+```bash
+node engine/render.js --template cc-bootcamp --only 3 --format png
+```
 
-## 評価軸との対応
+デザインの雰囲気を変える:
 
-| 評価軸 | 仕組み |
-|--------|--------|
-| **AI活用力** | Claude Code が `purpose` を執筆・レイアウト選択 → エンジンが PNG + PPTX 出力。AIに「やらせる」設計 |
-| **スピード** | ローカル並列レンダで 13枚 PNG + PPTX 約10秒 |
-| **クオリティ** | HTML/CSS と pptxgenjs で厳密制御。日本語・金額・レイアウトが100%崩れない |
-| **センス** | `purpose` フィールドと専用レイアウト関数で「削る/盛る」を構造的に明文化 |
-| **コミュニケーション** | フィードバックループは `templates/*.json` の差分修正で完結。PPTX で直接編集も可能 |
-| **再現性** | API キー・課金・レート制限ゼロ。誰の環境でも `npm install` だけで動く |
-| **柔軟性** | スライド枚数無制限・PNG/PPTX 切替・15スタイルから選択 |
+```bash
+node engine/render.js --template cc-bootcamp --style anthropic
+```
+
+## 自分用のスライドを作る流れ
+
+1. `templates` フォルダの中にある JSON ファイルをコピーします
+2. ファイル名を変えます  
+   例: `my-service.json`
+3. 中の文章を自分の内容に書き換えます
+4. 次のコマンドで生成します
+
+```bash
+node engine/render.js --template my-service
+```
+
+テンプレート名に `.json` は付けません。
+
+## フォルダの意味
+
+```text
+cc-slides-pro/
+├── README.md       この説明書
+├── CLAUDE.md       Claude Code に読ませる詳しい作業ルール
+├── templates/      スライドの元データ
+├── engine/         スライド作成プログラム
+└── output/         作られた画像とPPTXの保存先
+```
+
+普段よく触るのは `templates` と `output` です。`engine` は基本的に触らなくて大丈夫です。
+
+## 困ったとき
+
+### `node` が見つからないと言われる
+
+Node.js が入っていない、またはターミナルを開き直す必要があります。
+
+1. https://nodejs.org/ から Node.js の LTS 版を入れる
+2. ターミナルを閉じる
+3. もう一度ターミナルを開く
+4. 再度コマンドを実行する
+
+### `npm install` に時間がかかる
+
+初回だけ必要なブラウザ部品をダウンロードします。数分かかることがあります。
+
+### 生成したファイルが見つからない
+
+`output` フォルダを開いてください。テンプレート名と同じ名前のフォルダの中に出力されます。
+
+例:
+
+```text
+output/cc-bootcamp/
+```
+
+### PowerPoint で文字を直したい
+
+`.pptx` ファイルを PowerPoint / Keynote / Google Slides で開いてください。文字は画像ではなく、編集できるテキストとして入っています。
+
+## このツールの特徴
+
+- API キー不要
+- 追加課金なし
+- ローカル環境で動作
+- PNG と PPTX を同時出力
+- スライド枚数の制限なし
+- PowerPoint / Keynote / Google Slides で編集可能
 
 ## ライセンス
 

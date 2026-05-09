@@ -104,6 +104,11 @@ function buildHtml(slide, idx, total, deck, opts) {
     position:absolute;left:8%;right:8%;bottom:3%;
     height:1px;background:${t.rule};opacity:0.5;z-index:4;
   }
+  .deck-topline{
+    position:absolute;left:0;right:0;top:0;
+    height:3px;background:${t.secondary || t.accent};
+    z-index:6;
+  }
   .deck-content{
     position:absolute;inset:0;
     transform:scale(var(--fit-scale, 1));
@@ -113,6 +118,7 @@ function buildHtml(slide, idx, total, deck, opts) {
 </style>
 </head>
 <body>
+  <div class="deck-topline"></div>
   <div class="deck-content">${inner}</div>
   <div class="frame-rule"></div>
   <div class="deck-meta">${escapeHtml(deck.deck_id || "")}</div>
@@ -158,10 +164,14 @@ async function renderPptx(deck, targetIndices, styleOverride, outPath) {
 async function renderOne(browser, html, outPath, size) {
   const page = await browser.newPage();
   await page.setViewport({ width: size.w, height: size.h, deviceScaleFactor: 1 });
-  await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
-  // 念のためフォントロード待ち
+  await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 30000 });
+  // 外部フォントの通信状態に生成全体を引きずらせない。読める状態を優先し、最大5秒だけ待つ。
   await page.evaluate(async () => {
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    if (!document.fonts || !document.fonts.ready) return;
+    await Promise.race([
+      document.fonts.ready,
+      new Promise((resolve) => setTimeout(resolve, 5000)),
+    ]);
   });
 
   const scales = [1, 0.94, 0.88, 0.82, 0.76];
@@ -174,6 +184,8 @@ async function renderOne(browser, html, outPath, size) {
     await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
 
     lastOverflow = await getViewportOverflow(page);
+    const noWrapViolations = await getNoWrapViolations(page);
+    lastOverflow = [...lastOverflow, ...noWrapViolations];
     if (!lastOverflow.length) {
       usedScale = scale;
       break;
@@ -238,6 +250,39 @@ async function getViewportOverflow(page) {
     }
 
     return offenders.slice(0, 5);
+  });
+}
+
+async function getNoWrapViolations(page) {
+  return page.evaluate(() => {
+    const offenders = [];
+    const tolerance = 2;
+    const nodes = [...document.querySelectorAll("[data-no-wrap]")];
+
+    for (const el of nodes) {
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      const lineHeight = parseFloat(style.lineHeight);
+      const fontSize = parseFloat(style.fontSize);
+      const expectedLineHeight = Number.isFinite(lineHeight) ? lineHeight : fontSize * 1.1;
+      const hasWrapped = rect.height > expectedLineHeight * 1.35;
+      const clipsInline = el.scrollWidth > el.clientWidth + tolerance;
+
+      if (hasWrapped || clipsInline) {
+        offenders.push({
+          text: (el.textContent || "").trim().slice(0, 80),
+          reason: hasWrapped ? "no-wrap text wrapped" : "no-wrap text exceeds box",
+          rect: {
+            x: Math.round(rect.x),
+            y: Math.round(rect.y),
+            w: Math.round(rect.width),
+            h: Math.round(rect.height),
+          },
+        });
+      }
+    }
+
+    return offenders.slice(0, 10);
   });
 }
 

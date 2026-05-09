@@ -3,12 +3,12 @@
 
 export const STYLE_TOKENS = {
   bootcamp: {
-    bg: "#0B1020",
+    bg: "#070D1C",
     fg: "#FFFFFF",
-    muted: "rgba(255,255,255,0.55)",
+    muted: "rgba(255,255,255,0.58)",
     accent: "#FFB72B",
-    secondary: "#5B8DEF",
-    rule: "rgba(255,183,43,0.55)",
+    secondary: "#18D4FF",
+    rule: "rgba(255,255,255,0.14)",
     fontHead: "'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', system-ui, sans-serif",
     fontBody: "'Noto Sans JP', 'Hiragino Kaku Gothic ProN', system-ui, sans-serif",
     fontNum: "'Inter', 'Helvetica Neue', system-ui, sans-serif",

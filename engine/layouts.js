@@ -46,6 +46,12 @@ function fitHeroFontSize(text, max = 200, min = 72) {
   return Math.max(min, Math.floor(max - (len - 6) * 16));
 }
 
+function fitMoneyFontSize(text, max = 150, min = 86) {
+  const len = Array.from(String(text || "").replace(/\s+/g, "")).length;
+  if (len <= 7) return max;
+  return Math.max(min, Math.floor(max - (len - 7) * 12));
+}
+
 function fitCenterHeroFontSize(text) {
   const value = String(text || "").replace(/\s+/g, "");
   const len = Array.from(value).length;
@@ -77,8 +83,8 @@ function splitMetricText(main) {
 
 function fitSplitHeroFontSize(text) {
   const len = Array.from(String(text || "")).length;
-  if (len <= 6) return 148;
-  return Math.max(76, 148 - (len - 6) * 12);
+  if (len <= 6) return 122;
+  return Math.max(68, 122 - (len - 6) * 10);
 }
 
 // =============================================================
@@ -88,7 +94,7 @@ export function layoutCover({ main, sub, other }, t) {
   const footer = (other || []).map(esc).join(`<span class="dot"></span>`);
   return `
   <div class="cover">
-    <div class="rule-top"></div>
+    <div class="micro">Claude Code BOOTCAMP</div>
     <div class="cover-body">
       <h1 class="hero-title">${esc(main)}</h1>
       <p class="hero-sub">${esc(sub)}</p>
@@ -97,11 +103,11 @@ export function layoutCover({ main, sub, other }, t) {
   </div>
   <style>
     .cover{position:absolute;inset:0;padding:9% 9% 6%;display:flex;flex-direction:column;justify-content:space-between}
-    .rule-top{width:120px;height:3px;background:${t.accent};margin-bottom:auto}
-    .cover-body{margin-top:6%;max-width:84%}
+    .micro{font-family:${t.fontNum};font-weight:700;font-size:13px;letter-spacing:0.12em;color:${t.secondary || t.accent};text-transform:uppercase;margin-bottom:auto}
+    .cover-body{margin-top:5%;max-width:84%}
     .hero-title{
       font-family:${t.fontHead};font-weight:${t.weightHead};
-      font-size:108px;line-height:1.18;letter-spacing:-0.02em;
+      font-size:102px;line-height:1.16;letter-spacing:0;
       color:${t.fg};margin:0 0 28px;
     }
     .hero-sub{
@@ -112,7 +118,7 @@ export function layoutCover({ main, sub, other }, t) {
       font-family:${t.fontBody};font-size:18px;color:${t.muted};
       letter-spacing:0.08em;display:flex;align-items:center;gap:18px;
     }
-    .dot{width:4px;height:4px;border-radius:50%;background:${t.muted};display:inline-block}
+    .dot{width:4px;height:4px;border-radius:50%;background:${t.secondary || t.accent};display:inline-block}
   </style>`;
 }
 
@@ -141,12 +147,13 @@ export function layoutThreeColNumbered({ main, sub, other }, t) {
   </div>
   <style>
     .wrap{position:absolute;inset:0;padding:7% 8%;display:flex;flex-direction:column;gap:80px}
-    .head h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:64px;line-height:1.25;letter-spacing:-0.015em;color:${t.fg};margin:0 0 18px;max-width:88%}
+    .head::before{content:"PROBLEM";display:block;font-family:${t.fontNum};font-weight:800;font-size:12px;letter-spacing:0.16em;color:${t.secondary || t.accent};margin-bottom:18px}
+    .head h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:60px;line-height:1.25;letter-spacing:0;color:${t.fg};margin:0 0 18px;max-width:88%}
     .head p{font-family:${t.fontBody};font-size:24px;color:${t.muted};margin:0}
     .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:80px;flex:1;align-content:center}
     .col{display:flex;flex-direction:column;gap:18px}
     .num{font-family:${t.fontNum};font-weight:600;font-size:18px;letter-spacing:0.18em;color:${t.accent}}
-    .col .rule{width:48px;height:2px;background:${t.accent}}
+    .col .rule{width:48px;height:1px;background:${t.rule}}
     .label{font-family:${t.fontHead};font-weight:800;font-size:44px;color:${t.fg};line-height:1.25}
   </style>`;
 }
@@ -198,11 +205,12 @@ export function layout2x2Grid({ main, sub, other }, t) {
   </div>
   <style>
     .wrap{position:absolute;inset:0;padding:6% 8%;display:flex;flex-direction:column;gap:60px}
-    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:60px;line-height:1.22;letter-spacing:-0.015em;color:${t.fg};margin:0 0 14px;max-width:88%}
+    header::before{content:"BIG IDEA";display:block;font-family:${t.fontNum};font-weight:800;font-size:12px;letter-spacing:0.16em;color:${t.secondary || t.accent};margin-bottom:18px}
+    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:56px;line-height:1.22;letter-spacing:0;color:${t.fg};margin:0 0 14px;max-width:88%}
     header p{font-family:${t.fontBody};font-size:22px;color:${t.muted};margin:0}
     .grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0;flex:1;border-top:1px solid ${t.rule};border-left:1px solid ${t.rule}}
     .cell{padding:48px 56px;border-right:1px solid ${t.rule};border-bottom:1px solid ${t.rule};display:flex;flex-direction:column;justify-content:center;gap:18px}
-    .cnum{font-family:${t.fontNum};font-weight:600;font-size:18px;letter-spacing:0.18em;color:${t.accent}}
+    .cnum{font-family:${t.fontNum};font-weight:700;font-size:18px;letter-spacing:0.18em;color:${t.secondary || t.accent}}
     .clabel{font-family:${t.fontHead};font-weight:800;font-size:48px;color:${t.fg};line-height:1.2}
   </style>`;
 }
@@ -214,7 +222,7 @@ export function layoutSplitHeroNumber({ main, sub, other }, t) {
   // main から数字フレーズ (¥xxx / xxx万円 / 30分 / xxx%) を抜き出してヒーローに
   // 残りの前置きを kicker に。例: "初月売上、4,500万円。" → kicker:"初月売上" hero:"4,500万円"
   const { kicker, hero } = splitMetricText(main);
-  const heroBlock = hero ? `<div class="hero" style="font-size:${fitSplitHeroFontSize(hero)}px">${esc(hero)}</div>` : "";
+  const heroBlock = hero ? `<div class="hero" data-no-wrap style="font-size:${fitSplitHeroFontSize(hero)}px">${esc(hero)}</div>` : "";
 
   const list = (other || []).map(it => `<li>${esc(it)}</li>`).join("");
   return `
@@ -230,10 +238,10 @@ export function layoutSplitHeroNumber({ main, sub, other }, t) {
     </div>
   </div>
   <style>
-    .wrap{position:absolute;inset:0;display:grid;grid-template-columns:1.05fr 1px 0.95fr;padding:8%;gap:80px;align-items:center}
+    .wrap{position:absolute;inset:0;display:grid;grid-template-columns:0.98fr 1px 1.02fr;padding:8%;gap:64px;align-items:center}
     .left{display:flex;flex-direction:column;gap:24px;min-width:0}
-    .kicker{font-family:${t.fontNum};font-weight:600;font-size:22px;letter-spacing:0.18em;color:${t.accent}}
-    .hero{font-family:${t.fontNum};font-weight:900;line-height:0.95;letter-spacing:-0.04em;color:${t.accent};white-space:nowrap;max-width:100%;overflow-wrap:anywhere}
+    .kicker{font-family:${t.fontNum};font-weight:700;font-size:22px;letter-spacing:0.18em;color:${t.secondary || t.accent}}
+    .hero{font-family:${t.fontNum};font-weight:900;line-height:0.95;letter-spacing:-0.025em;color:${t.accent};white-space:nowrap;max-width:100%;overflow:visible;font-variant-numeric:tabular-nums}
     .divider{background:${t.rule};width:1px;height:60%;justify-self:center}
     .right{display:flex;flex-direction:column;gap:28px}
     .sub{font-family:${t.fontBody};font-weight:600;font-size:26px;color:${t.fg};margin:0;line-height:1.45}
@@ -266,15 +274,17 @@ export function layoutThreeColPriced({ main, sub, other }, t) {
     <section class="pgrid">${cols}</section>
   </div>
   <style>
-    .wrap{position:absolute;inset:0;padding:7% 8%;display:flex;flex-direction:column;gap:60px}
-    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:58px;line-height:1.22;letter-spacing:-0.015em;color:${t.fg};margin:0 0 16px}
+    .wrap{position:absolute;inset:0;padding:7% 8%;display:flex;flex-direction:column;gap:54px}
+    header::before{content:"BONUS";display:block;font-family:${t.fontNum};font-weight:800;font-size:12px;letter-spacing:0.16em;color:${t.secondary || t.accent};margin-bottom:18px}
+    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:54px;line-height:1.22;letter-spacing:0;color:${t.fg};margin:0 0 16px}
     header p{font-family:${t.fontBody};font-size:22px;color:${t.muted};margin:0}
-    .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:60px;flex:1;align-content:center}
-    .pcol{display:flex;flex-direction:column;gap:14px;padding:0 8px}
+    .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;flex:1;align-content:center;border-top:1px solid ${t.rule};border-bottom:1px solid ${t.rule}}
+    .pcol{display:flex;flex-direction:column;gap:14px;padding:44px 42px;border-right:1px solid ${t.rule}}
+    .pcol:last-child{border-right:0}
     .pnum{font-family:${t.fontNum};font-weight:700;font-size:32px;color:${t.accent};line-height:1}
     .plabel{font-family:${t.fontHead};font-weight:800;font-size:28px;color:${t.fg};line-height:1.3;min-height:78px}
-    .pline{width:36px;height:2px;background:${t.accent};margin-top:6px}
-    .pprice{font-family:${t.fontNum};font-weight:800;font-size:42px;color:${t.fg};margin-top:6px;letter-spacing:-0.01em}
+    .pline{width:100%;height:1px;background:${t.rule};margin-top:6px}
+    .pprice{font-family:${t.fontNum};font-weight:800;font-size:42px;color:${t.accent};margin-top:6px;letter-spacing:0}
   </style>`;
 }
 
@@ -302,13 +312,14 @@ export function layoutTwoColList({ main, sub, other }, t) {
     </section>
   </div>
   <style>
-    .wrap{position:absolute;inset:0;padding:6.5% 8%;display:flex;flex-direction:column;gap:48px}
-    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:54px;line-height:1.22;letter-spacing:-0.015em;color:${t.fg};margin:0 0 14px}
+    .wrap{position:absolute;inset:0;padding:6.5% 8%;display:flex;flex-direction:column;gap:44px}
+    header::before{content:"CURRICULUM";display:block;font-family:${t.fontNum};font-weight:800;font-size:12px;letter-spacing:0.16em;color:${t.secondary || t.accent};margin-bottom:18px}
+    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:52px;line-height:1.22;letter-spacing:0;color:${t.fg};margin:0 0 14px}
     header p{font-family:${t.fontBody};font-size:20px;color:${t.muted};margin:0}
     .lists{display:grid;grid-template-columns:1fr 1fr;gap:80px;flex:1}
     ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
     li{display:grid;grid-template-columns:62px 1fr;gap:18px;align-items:baseline;padding:8px 0;border-bottom:1px solid ${t.rule}}
-    .ln{font-family:${t.fontNum};font-weight:600;font-size:18px;color:${t.accent};letter-spacing:0.06em}
+    .ln{font-family:${t.fontNum};font-weight:700;font-size:18px;color:${t.secondary || t.accent};letter-spacing:0.06em}
     .ll{font-family:${t.fontBody};font-weight:500;font-size:22px;color:${t.fg};line-height:1.4}
   </style>`;
 }
@@ -340,10 +351,11 @@ export function layoutHeroNumberList({ main, sub, other }, t) {
   <style>
     .wrap{position:absolute;inset:0;padding:5% 8%;display:flex;flex-direction:column;gap:32px;align-items:center;text-align:center}
     header{max-width:100%}
-    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:46px;line-height:1.25;color:${t.fg};margin:0 0 12px}
+    header::before{content:"VALUE STACK";display:block;font-family:${t.fontNum};font-weight:800;font-size:12px;letter-spacing:0.16em;color:${t.secondary || t.accent};margin-bottom:16px}
+    header h1{font-family:${t.fontHead};font-weight:${t.weightHead};font-size:44px;line-height:1.25;color:${t.fg};margin:0 0 12px}
     header p{font-family:${t.fontBody};font-size:20px;color:${t.muted};margin:0}
     .hero{font-family:${t.fontNum};font-weight:900;line-height:1;letter-spacing:-0.04em;color:${t.accent};margin:8px 0;max-width:92%;overflow-wrap:anywhere}
-    .rule{width:80px;height:2px;background:${t.accent};margin:0 auto}
+    .rule{width:760px;max-width:86%;height:1px;background:${t.rule};margin:0 auto}
     .rows{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px;width:780px;max-width:90%}
     .rows li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid ${t.rule}}
     .lab{font-family:${t.fontBody};font-weight:500;font-size:20px;color:${t.fg}}
@@ -359,6 +371,8 @@ export function layoutPriceContrast({ main, sub, other }, t) {
   const prices = String(main).match(/¥[\d,]+/g) || [];
   const before = prices[0] || "";
   const after = prices[1] || "";
+  const beforeSize = fitMoneyFontSize(before, 118, 82);
+  const afterSize = fitMoneyFontSize(after, 150, 92);
   const footer = (other || []).map(it => `<span>${esc(it)}</span>`).join(`<span class="sep">/</span>`);
   return `
   <div class="wrap">
@@ -368,13 +382,13 @@ export function layoutPriceContrast({ main, sub, other }, t) {
     <section class="contrast">
       <div class="left">
         <div class="cap">受け取る価値</div>
-        <div class="amount muted">${esc(before)}</div>
+        <div class="amount muted" data-no-wrap style="font-size:${beforeSize}px">${esc(before)}</div>
         <div class="muted2">相当</div>
       </div>
       <div class="arrow">→</div>
       <div class="right">
         <div class="cap">あなたの投資</div>
-        <div class="amount accent">${esc(after)}</div>
+        <div class="amount accent" data-no-wrap style="font-size:${afterSize}px">${esc(after)}</div>
         <div class="muted2">(税抜)</div>
       </div>
     </section>
@@ -383,12 +397,12 @@ export function layoutPriceContrast({ main, sub, other }, t) {
   <style>
     .wrap{position:absolute;inset:0;padding:6% 7%;display:flex;flex-direction:column;justify-content:space-between}
     header .sub{font-family:${t.fontHead};font-weight:700;font-size:36px;color:${t.fg};margin:0;line-height:1.4;text-align:center;letter-spacing:-0.01em}
-    .contrast{display:grid;grid-template-columns:1fr auto 1fr;gap:60px;align-items:center;flex:1}
+    .contrast{display:grid;grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr);gap:44px;align-items:center;flex:1}
     .left,.right{display:flex;flex-direction:column;align-items:center;gap:14px}
-    .cap{font-family:${t.fontNum};font-weight:600;font-size:18px;color:${t.muted};letter-spacing:0.18em;text-transform:uppercase}
-    .amount{font-family:${t.fontNum};font-weight:900;line-height:1;letter-spacing:-0.045em}
-    .amount.muted{font-size:120px;color:${t.muted};text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:${t.accent}}
-    .amount.accent{font-size:200px;color:${t.accent}}
+    .cap{font-family:${t.fontNum};font-weight:700;font-size:18px;color:${t.secondary || t.accent};letter-spacing:0.18em;text-transform:uppercase}
+    .amount{font-family:${t.fontNum};font-weight:900;line-height:1;letter-spacing:-0.025em;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .amount.muted{color:${t.muted};text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:${t.accent}}
+    .amount.accent{color:${t.accent}}
     .muted2{font-family:${t.fontBody};font-size:18px;color:${t.muted}}
     .arrow{font-family:${t.fontNum};font-size:80px;color:${t.accent};line-height:1;font-weight:300}
     footer{display:flex;justify-content:center;align-items:center;gap:18px;color:${t.muted};font-family:${t.fontBody};font-size:18px;letter-spacing:0.04em}

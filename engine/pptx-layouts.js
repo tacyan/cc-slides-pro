@@ -69,6 +69,12 @@ function fitHeroFontSize(text, max = 130, min = 44) {
   return Math.max(min, Math.floor(max - (len - 6) * 10));
 }
 
+function fitMoneyFontSize(text, max = 88, min = 48) {
+  const len = Array.from(String(text || "").replace(/\s+/g, "")).length;
+  if (len <= 7) return max;
+  return Math.max(min, Math.floor(max - (len - 7) * 7));
+}
+
 function fitCenterHeroFontSize(text) {
   const value = String(text || "").replace(/\s+/g, "");
   const len = Array.from(value).length;
@@ -97,12 +103,17 @@ function splitMetricText(main) {
 
 function fitSplitHeroFontSize(text) {
   const len = Array.from(String(text || "")).length;
-  if (len <= 6) return 96;
-  return Math.max(44, 96 - (len - 6) * 8);
+  if (len <= 6) return 76;
+  return Math.max(42, 76 - (len - 6) * 7);
 }
 
 // ─── 共通フッター(ページ番号・デッキ名・横線) ───────────────────
 export function addFrame(slide, t, { idx, total, deck }) {
+  // 上部のシアンライン。画像出力と同じく、全スライドに一貫した締まりを作る。
+  slide.addShape("line", {
+    x: 0, y: 0, w: "100%", h: 0,
+    line: { color: hex(t.secondary || t.accent), width: 2 },
+  });
   // 下のヘアライン (rule)
   slide.addShape("line", {
     x: "8%", y: "94%", w: "84%", h: 0,
@@ -134,15 +145,15 @@ export function addFrame(slide, t, { idx, total, deck }) {
 // LAYOUT: cover
 // =============================================================
 export function pptxCover(slide, { main, sub, other }, t) {
-  // 上部のゴールドの細いライン
-  slide.addShape("line", {
-    x: "9%", y: "22%", w: "6.5%", h: 0,
-    line: { color: hex(t.accent), width: 3 },
+  slide.addText("Claude Code BOOTCAMP", {
+    x: "9%", y: "12%", w: "50%", h: "4%",
+    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 8,
+    color: hex(t.secondary || t.accent), charSpacing: 2,
   });
   // 巨大タイトル
   slide.addText(String(main || ""), {
     x: "9%", y: "48%", w: "82%", h: "30%",
-    fontFace: resolveFont(t.fontHead), bold: true, fontSize: 56,
+    fontFace: resolveFont(t.fontHead), bold: true, fontSize: 54,
     color: hex(t.fg), valign: "top", align: "left",
   });
   // サブタイトル
@@ -219,11 +230,11 @@ export function pptxThreeColNumbered(slide, { main, sub, other }, t) {
     slide.addText(num, {
       x, y: "48%", w: `${colW}%`, h: "5%",
       fontFace: resolveFont(t.fontNum), bold: true, fontSize: 12,
-      color: hex(t.accent), charSpacing: 6, align: "left",
+      color: hex(t.secondary || t.accent), charSpacing: 6, align: "left",
     });
     slide.addShape("line", {
       x, y: "55%", w: "3%", h: 0,
-      line: { color: hex(t.accent), width: 2 },
+      line: { color: hex(t.rule), width: 0.5 },
     });
     slide.addText(label, {
       x, y: "60%", w: `${colW - 2}%`, h: "12%",
@@ -274,7 +285,7 @@ export function pptx2x2Grid(slide, { main, sub, other }, t) {
     slide.addText(num, {
       x: p.x, y: p.y, w: "38%", h: "5%",
       fontFace: resolveFont(t.fontNum), bold: true, fontSize: 11,
-      color: hex(t.accent), charSpacing: 6,
+      color: hex(t.secondary || t.accent), charSpacing: 6,
     });
     slide.addText(label, {
       x: p.x, y: `${parseFloat(p.y) + 7}%`, w: "38%", h: "16%",
@@ -296,7 +307,7 @@ export function pptxSplitHeroNumber(slide, { main, sub, other }, t) {
     slide.addText(kicker, {
       x: "9%", y: "38%", w: "40%", h: "6%",
       fontFace: resolveFont(t.fontNum), bold: true, fontSize: 14,
-      color: hex(t.accent), charSpacing: 4,
+      color: hex(t.secondary || t.accent), charSpacing: 4,
     });
   }
   if (hero) {
@@ -506,7 +517,7 @@ export function pptxPriceContrast(slide, { main, sub, other }, t) {
   // 左: 価値(取り消し線)
   slide.addText(before, {
     x: "5%", y: "43%", w: "38%", h: "20%",
-    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 56,
+    fontFace: resolveFont(t.fontNum), bold: true, fontSize: fitMoneyFontSize(before, 58, 44),
     color: hex(t.muted), strike: true, align: "center", valign: "middle",
   });
   slide.addText("相当", {
@@ -531,7 +542,7 @@ export function pptxPriceContrast(slide, { main, sub, other }, t) {
   // 右: 投資額
   slide.addText(after, {
     x: "57%", y: "43%", w: "38%", h: "22%",
-    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 92,
+    fontFace: resolveFont(t.fontNum), bold: true, fontSize: fitMoneyFontSize(after, 82, 52),
     color: hex(t.accent), align: "center", valign: "middle",
   });
   slide.addText("(税抜)", {

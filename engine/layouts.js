@@ -46,6 +46,22 @@ function fitHeroFontSize(text, max = 200, min = 72) {
   return Math.max(min, Math.floor(max - (len - 6) * 16));
 }
 
+function fitCenterHeroFontSize(text) {
+  const value = String(text || "").replace(/\s+/g, "");
+  const len = Array.from(value).length;
+  const isMetric = /^(¥[\d,]+|[\d,.]+%?|[\d,]+(?:秒間|秒|分間|分|時間|日間|日|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円))$/.test(value);
+
+  if (isMetric) {
+    if (len <= 3) return 300;
+    if (len <= 6) return 260;
+    return Math.max(150, 260 - (len - 6) * 14);
+  }
+
+  if (len <= 3) return 270;
+  if (len <= 5) return 220;
+  return Math.max(132, 220 - (len - 5) * 18);
+}
+
 function splitMetricText(main) {
   const mainStr = String(main || "");
   const metricPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d,.]+\s*%)/;
@@ -140,6 +156,7 @@ export function layoutThreeColNumbered({ main, sub, other }, t) {
 // =============================================================
 export function layoutHeroNumber({ main, sub, other }, t) {
   const caption = (other && other[0]) ? `<p class="cap">${esc(other[0])}</p>` : "";
+  const heroSize = fitCenterHeroFontSize(main);
   return `
   <div class="wrap">
     <div class="hero">${esc(main)}</div>
@@ -147,13 +164,14 @@ export function layoutHeroNumber({ main, sub, other }, t) {
     ${caption}
   </div>
   <style>
-    .wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8%;text-align:center}
+    .wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9% 8% 10%;text-align:center;gap:26px}
     .hero{
-      font-family:${t.fontNum};font-weight:900;
-      font-size:340px;line-height:0.9;letter-spacing:-0.04em;
-      color:${t.accent};margin:0 0 60px;
+      font-family:${t.fontHead};font-weight:${t.weightHead};
+      font-size:${heroSize}px;line-height:1.08;letter-spacing:0;
+      color:${t.accent};margin:0;
+      max-width:88%;overflow-wrap:anywhere;
     }
-    .sub{font-family:${t.fontBody};font-weight:500;font-size:32px;color:${t.fg};margin:0 0 24px;max-width:880px;line-height:1.5}
+    .sub{font-family:${t.fontBody};font-weight:500;font-size:30px;color:${t.fg};margin:0;max-width:1000px;line-height:1.5}
     .cap{font-family:${t.fontBody};font-size:20px;color:${t.muted};margin:0;letter-spacing:0.04em}
   </style>`;
 }

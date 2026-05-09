@@ -104,10 +104,16 @@ function buildHtml(slide, idx, total, deck, opts) {
     position:absolute;left:8%;right:8%;bottom:3%;
     height:1px;background:${t.rule};opacity:0.5;z-index:4;
   }
+  .deck-content{
+    position:absolute;inset:0;
+    transform:scale(var(--fit-scale, 1));
+    transform-origin:center center;
+    z-index:1;
+  }
 </style>
 </head>
 <body>
-  ${inner}
+  <div class="deck-content">${inner}</div>
   <div class="frame-rule"></div>
   <div class="deck-meta">${escapeHtml(deck.deck_id || "")}</div>
   <div class="deck-page"><b>${pageNum}</b> / ${totalStr}</div>
@@ -157,13 +163,36 @@ async function renderOne(browser, html, outPath, size) {
   await page.evaluate(async () => {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
   });
-  await assertNoViewportOverflow(page, outPath);
+
+  const scales = [1, 0.94, 0.88, 0.82, 0.76];
+  let lastOverflow = [];
+  let usedScale = 1;
+  for (const scale of scales) {
+    await page.evaluate((value) => {
+      document.documentElement.style.setProperty("--fit-scale", String(value));
+    }, scale);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
+
+    lastOverflow = await getViewportOverflow(page);
+    if (!lastOverflow.length) {
+      usedScale = scale;
+      break;
+    }
+  }
+
+  if (lastOverflow.length) {
+    const target = path.basename(outPath);
+    await page.close();
+    throw new Error(`Viewport overflow detected in ${target}: ${JSON.stringify(lastOverflow)}`);
+  }
+
   await page.screenshot({ path: outPath, type: "png", fullPage: false, clip: { x: 0, y: 0, width: size.w, height: size.h } });
   await page.close();
+  return { scale: usedScale };
 }
 
-async function assertNoViewportOverflow(page, outPath) {
-  const overflow = await page.evaluate(() => {
+async function getViewportOverflow(page) {
+  return page.evaluate(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const tolerance = 2;
@@ -187,11 +216,17 @@ async function assertNoViewportOverflow(page, outPath) {
         rect.right > vw + tolerance ||
         rect.bottom > vh + tolerance;
 
-      if (out) {
+      const clipped =
+        hasText &&
+        (el.scrollWidth > el.clientWidth + tolerance || el.scrollHeight > el.clientHeight + tolerance) &&
+        style.overflow !== "visible";
+
+      if (out || clipped) {
         offenders.push({
           tag: el.tagName.toLowerCase(),
           className: String(el.className || ""),
           text: (el.textContent || "").trim().slice(0, 80),
+          reason: out ? "viewport" : "clipped",
           rect: {
             left: Math.round(rect.left),
             top: Math.round(rect.top),
@@ -204,11 +239,6 @@ async function assertNoViewportOverflow(page, outPath) {
 
     return offenders.slice(0, 5);
   });
-
-  if (overflow.length) {
-    const target = path.basename(outPath);
-    throw new Error(`Viewport overflow detected in ${target}: ${JSON.stringify(overflow)}`);
-  }
 }
 
 // ─── CLI ──────────────────────────────────────────────────────
@@ -329,10 +359,11 @@ async function main() {
         const label = (slide.text?.main || "").slice(0, 36);
         const t1 = Date.now();
         try {
-          await renderOne(browser, html, outPath, size);
+          const rendered = await renderOne(browser, html, outPath, size);
           const dur = ((Date.now() - t1) / 1000).toFixed(1);
-          console.log(`  ${c.green("✓")} png slide ${String(idx + 1).padStart(2, "0")}  ${dur}s  ${c.gray(`[${layoutKey}]`)}  ${label}`);
-          log.png.ok.push({ slide: idx + 1, layout: layoutKey, file: fname });
+          const scaleNote = rendered.scale < 1 ? `  ${c.yellow(`fit ${rendered.scale}`)}` : "";
+          console.log(`  ${c.green("✓")} png slide ${String(idx + 1).padStart(2, "0")}  ${dur}s  ${c.gray(`[${layoutKey}]`)}${scaleNote}  ${label}`);
+          log.png.ok.push({ slide: idx + 1, layout: layoutKey, file: fname, scale: rendered.scale });
         } catch (err) {
           console.log(`  ${c.red("✗")} png slide ${String(idx + 1).padStart(2, "0")}  → ${err.message}`);
           log.png.fail.push({ slide: idx + 1, error: String(err.message) });

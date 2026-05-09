@@ -146,6 +146,18 @@ export const STYLE_TOKENS = {
     fontNum: "'Bebas Neue', 'Inter', system-ui, sans-serif",
     weightHead: 900,
   },
+  kimetsu: {
+    bg: "#07110D",
+    fg: "#F7F1E5",
+    muted: "rgba(247,241,229,0.62)",
+    accent: "#C51F2C",
+    secondary: "#1F7A5C",
+    rule: "rgba(197,31,44,0.55)",
+    fontHead: "'Noto Serif JP', 'Noto Sans JP', Georgia, serif",
+    fontBody: "'Noto Sans JP', system-ui, sans-serif",
+    fontNum: "'Inter', 'Noto Sans JP', system-ui, sans-serif",
+    weightHead: 800,
+  },
   canva: {
     bg: "#FFFFFF",
     fg: "#0A0A0A",

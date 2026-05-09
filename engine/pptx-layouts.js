@@ -69,6 +69,22 @@ function fitHeroFontSize(text, max = 130, min = 44) {
   return Math.max(min, Math.floor(max - (len - 6) * 10));
 }
 
+function fitCenterHeroFontSize(text) {
+  const value = String(text || "").replace(/\s+/g, "");
+  const len = Array.from(value).length;
+  const isMetric = /^(¥[\d,]+|[\d,.]+%?|[\d,]+(?:秒間|秒|分間|分|時間|日間|日|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円))$/.test(value);
+
+  if (isMetric) {
+    if (len <= 3) return 190;
+    if (len <= 6) return 164;
+    return Math.max(96, 164 - (len - 6) * 9);
+  }
+
+  if (len <= 3) return 170;
+  if (len <= 5) return 138;
+  return Math.max(82, 138 - (len - 5) * 11);
+}
+
 function splitMetricText(main) {
   const mainStr = String(main || "");
   const metricPattern = /(¥[\d,]+|[\d,]+\s*(?:秒間|秒|分間|分|時間|日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|枚|本|個|件|回|つ|万円|億円)|[\d,.]+\s*%)/;
@@ -151,26 +167,29 @@ export function pptxCover(slide, { main, sub, other }, t) {
 // LAYOUT: hero-number
 // =============================================================
 export function pptxHeroNumber(slide, { main, sub, other }, t) {
-  // 中央巨大数字
+  // 中央ヒーロー。数字だけでなく短い日本語フレーズでも収まるように調整する。
   slide.addText(String(main || ""), {
-    x: "5%", y: "20%", w: "90%", h: "45%",
-    fontFace: resolveFont(t.fontNum), bold: true, fontSize: 220,
+    x: "6%", y: "24%", w: "88%", h: "34%",
+    fontFace: resolveFont(t.fontHead), bold: true, fontSize: fitCenterHeroFontSize(main),
     color: hex(t.accent), align: "center", valign: "middle",
+    fit: "shrink",
   });
   // サブ
   if (sub) {
     slide.addText(String(sub), {
-      x: "10%", y: "68%", w: "80%", h: "8%",
-      fontFace: resolveFont(t.fontBody), fontSize: 22,
-      color: hex(t.fg), align: "center",
+      x: "12%", y: "61%", w: "76%", h: "12%",
+      fontFace: resolveFont(t.fontBody), fontSize: 20,
+      color: hex(t.fg), align: "center", valign: "middle",
+      fit: "shrink",
     });
   }
   // キャプション
   if (other && other[0]) {
     slide.addText(String(other[0]), {
-      x: "10%", y: "78%", w: "80%", h: "5%",
+      x: "12%", y: "76%", w: "76%", h: "5%",
       fontFace: resolveFont(t.fontBody), fontSize: 14,
       color: hex(t.muted), align: "center",
+      fit: "shrink",
     });
   }
 }

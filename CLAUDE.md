@@ -16,6 +16,8 @@
 ## 共通ルール（最重要）
 
 - ユーザーはプログラミング未経験者の可能性が高い。コードの詳細説明は不要
+- 初回セットアップ前のユーザーには、Mac / Windows の違いを吸収して、ターミナルを開くところから最初のサンプル生成まで案内する
+- 「設定してない」「初めて」「何からやればいい」「動かない」「Claude Codeで使いたい」などの発話は、スライド作成前に初回セットアップ確認から入る
 - 修正は何度でも対応する
 - **`purpose` フィールドの品質がデザインの品質を決める。ここに時間をかける**
 - 安っぽい情報商材っぽさ・絵文字・装飾過多は絶対に避ける
@@ -23,15 +25,102 @@
 
 ---
 
-## セットアップ
+## 初回セットアップ未完了時の案内
 
-初回のみ:
+ユーザーが超初心者でも迷わないように、必ず短い確認から始める。専門用語を続けて出さず、1回の返答でやることを多くしすぎない。
+
+### 最初に確認すること
+
+1. Mac か Windows か
+2. このプロジェクトのフォルダを開けているか
+3. Node.js を入れたことがあるか
+4. `npm install --prefix engine` を実行済みか
+
+Claude Code でコマンド実行できる場合は、ユーザーに代わって次を確認する:
 
 ```bash
-cd engine && npm install && cd ..
+node --version
+npm --version
+test -d engine/node_modules && echo "engine dependencies installed"
 ```
 
-`npm install` で Puppeteer が Chromium をダウンロードします (約 170MB / 数十秒)。**API キーや環境変数は一切不要**です。
+Windows の PowerShell でユーザー自身が確認する場合は、次を案内する:
+
+```powershell
+node --version
+npm --version
+Test-Path engine\node_modules
+```
+
+### Node.js が未インストールの場合
+
+次のように案内する:
+
+1. https://nodejs.org/ を開く
+2. **LTS** と書かれた版をダウンロードする
+3. インストーラーを開き、基本はそのまま「次へ」で進める
+4. 終わったらターミナル / PowerShell / Claude Code を開き直す
+5. `node --version` でバージョンが表示されるか確認する
+
+### プロジェクトフォルダの開き方
+
+Mac:
+
+1. `ターミナル` を開く
+2. `cd ` と入力する。`cd` の後ろには半角スペースを入れる
+3. `cc-slides-pro` フォルダをターミナルにドラッグする
+4. Enter を押す
+
+Windows:
+
+1. `cc-slides-pro` フォルダを開く
+2. フォルダ内の何もない場所で右クリックする
+3. **ターミナルで開く** または **PowerShell で開く** を選ぶ
+
+Claude Code:
+
+1. Claude Code で `cc-slides-pro` フォルダを開く
+2. ユーザーが「初めてです。セットアップからサンプル作成まで案内して」と言ったら、この章の手順で進める
+
+### 初回準備
+
+Mac / Windows / Claude Code のどれでも、プロジェクト直下で次を実行する:
+
+```bash
+npm install --prefix engine
+```
+
+`npm install` で Puppeteer が Chromium をダウンロードします。数分かかることがあります。**API キーや環境変数は一切不要**です。
+
+### 最初のサンプル生成
+
+初回準備が成功したら、必ず次のサンプル生成まで案内する:
+
+```bash
+node engine/render.js --template cc-bootcamp
+```
+
+生成後は `output/cc-bootcamp/` を案内し、次の2種類ができることを説明する:
+
+- `slide-01.png` など: 画像として使えるスライド
+- `cc-bootcamp.pptx`: PowerPoint / Keynote / Google Slides で編集できるファイル
+
+### 初回案内の返答テンプレート
+
+ユーザーが「初めて」「設定していない」「何からやればいい」と言ったら、次の粒度で返す:
+
+```text
+まず使える状態か確認します。Mac か Windows かを教えてください。
+
+そのあと、この順番で進めます。
+1. Node.js が入っているか確認
+2. プロジェクトフォルダを開く
+3. 初回準備のコマンドを1つ実行
+4. サンプルスライドを作成
+5. output フォルダで PNG と PPTX を確認
+```
+
+Claude Code が実行可能な環境では、ユーザーに長い説明をする前にこちらで `node --version`、`npm --version`、`engine/node_modules` の有無を確認して、足りない作業だけ案内する。
 
 ---
 

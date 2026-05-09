@@ -270,11 +270,15 @@ export function layoutTwoColList({ main, sub, other }, t) {
 // LAYOUT: hero-number-list (8枚目: 巨大金額 + 内訳3行)
 // =============================================================
 export function layoutHeroNumberList({ main, sub, other }, t) {
-  // mainからメイン文と金額を分離 — title=見出し, sub=サブ, other=評価行
-  // 8枚目は main="2期生限定、特典 ¥1,836,000 相当。"
-  const heroMatch = main.match(/(¥[\d,]+)/);
-  const heroNum = heroMatch ? heroMatch[1] : main;
-  const headTxt = main.replace(/(¥[\d,]+)/, "").replace(/\s+/g, " ").trim();
+  // mainからヒーロー数字と見出しを分離。¥金額 / 日間 / ヶ月 / 名 等にも対応
+  // 例: main="2期生限定、特典 ¥1,836,000 相当。" → hero="¥1,836,000"
+  // 例: main="30日間、全額返金保証。"          → hero="30日間"
+  const heroPattern = /(¥[\d,]+|[\d,]+\s*(?:日間|ヶ月間|ヶ月|年間|年|週間|週|名|人|万円|億円)|[\d.]+\s*%)/;
+  const heroMatch = main.match(heroPattern);
+  const heroNum = heroMatch ? heroMatch[1].replace(/\s+/g, "") : main;
+  const headTxt = heroMatch
+    ? main.replace(heroMatch[0], "").replace(/^[、。.,\s]+|[、。.,\s]+$/g, "").trim()
+    : "";
   const rows = (other || []).map(it => {
     const m = String(it).match(/^(.+?)\s+(¥[\d,]+)\s*$/);
     if (m) return `<li><span class="lab">${esc(m[1])}</span><span class="prc">${esc(m[2])}</span></li>`;

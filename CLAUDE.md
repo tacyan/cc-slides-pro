@@ -1,8 +1,8 @@
 # cc-slides-pro — Claude Code でセールス級スライドを自動生成
 
-このリポジトリは、Claude Code に **「ブートキャンプの販売スライド作って」** と話しかけるだけで、販売現場で使えるレベルのスライド画像を自動生成するシステム。
+このリポジトリは、Claude Code に **「ブートキャンプの販売スライド作って」** と話しかけるだけで、販売現場で使えるレベルのスライドを **PNG 画像 + 編集可能な PPTX** で自動生成するシステム。
 
-外部 API キー不要・課金ゼロ・完全オフライン動作。HTML + headless Chromium (Puppeteer) でレンダリングするため、日本語テキストや金額(¥198,000 等)は一切崩れません。
+外部 API キー不要・課金ゼロ・完全オフライン動作。**スライド枚数は無制限**。HTML + headless Chromium で PNG を、pptxgenjs で PowerPoint / Keynote / Google Slides で本文を直接書き換え可能なネイティブ PPTX を出力します。
 
 ## トリガー
 
@@ -43,16 +43,21 @@ cc-slides-pro/
 ├── README.md
 ├── .gitignore
 ├── engine/
-│   ├── render-html.js              ← レンダリングエンジン本体
-│   ├── layouts.js                  ← 10種のレイアウト関数
+│   ├── render.js                   ← レンダリングエンジン本体 (PNG + PPTX)
+│   ├── layouts.js                  ← HTML/CSS レイアウト関数 (PNG用)
+│   ├── pptx-layouts.js             ← PPTX レイアウト関数 (編集可能テキスト)
 │   ├── style-tokens.js             ← 15種のスタイル別 CSS トークン
 │   ├── presets.js                  ← 出力フォーマット定義
 │   └── package.json
 ├── templates/
 │   ├── cc-bootcamp.json            ← CCブートキャンプ販売10枚(既定)
+│   ├── cc-bootcamp-extended.json   ← 13枚版 (>10枚デッキの実証)
 │   └── cc-bootcamp-thumbnail.json  ← サムネ/ヒーロー画像3枚
 ├── examples/                       ← 生成済みサンプル(評価提出用)
 └── output/                         ← 生成画像の出力先(gitignore)
+    └── <deck_id>/
+        ├── slide-01.png 〜 slide-NN.png   ← 1920x1080 PNG
+        └── <deck_id>.pptx                  ← 編集可能 PPTX
 ```
 
 ---
@@ -62,33 +67,50 @@ cc-slides-pro/
 ユーザーが「**CCブートキャンプのスライド作って**」と言ったら、以下を実行:
 
 ```bash
-node engine/render-html.js --template cc-bootcamp
+node engine/render.js --template cc-bootcamp
 ```
 
-これだけで、`templates/cc-bootcamp.json` の10枚を `output/cc-bootcamp/slide-01.png` 〜 `slide-10.png` に出力する。**約6秒で完了**し、生成完了後に自動でフォルダが開く。
+これだけで、`templates/cc-bootcamp.json` の10枚を `output/cc-bootcamp/` に**PNG画像10枚 + PPTX 1ファイル**として出力する。**約7秒で完了**し、生成完了後に自動でフォルダが開く。
+
+13枚以上の長いデッキも同じコマンドで生成可能:
+
+```bash
+node engine/render.js --template cc-bootcamp-extended  # 13枚版
+```
+
+出力形式の切替:
+
+```bash
+node engine/render.js --template cc-bootcamp --format png      # PNGのみ
+node engine/render.js --template cc-bootcamp --format pptx     # PPTXのみ
+node engine/render.js --template cc-bootcamp --format both     # 両方(既定)
+```
 
 スタイル変更が要望された場合:
 
 ```bash
 # Anthropic 風(温かい知性)
-node engine/render-html.js --template cc-bootcamp --style anthropic
+node engine/render.js --template cc-bootcamp --style anthropic
 
 # Apple 風(ミニマル)
-node engine/render-html.js --template cc-bootcamp --style apple
+node engine/render.js --template cc-bootcamp --style apple
 
-# 利用可能スタイル一覧 (CLI ヘルプ)
-node engine/render-html.js --help
+# 利用可能レイアウト/オプション一覧
+node engine/render.js --help
 ```
 
-修正・再生成:
+修正・再生成 (PNG):
 
 ```bash
 # スライド3と7だけ再生成
-node engine/render-html.js --template cc-bootcamp --only 3,7
+node engine/render.js --template cc-bootcamp --only 3,7 --format png
 
 # 連番範囲(2〜4枚目)
-node engine/render-html.js --template cc-bootcamp --only 2-4
+node engine/render.js --template cc-bootcamp --only 2-4 --format png
 ```
+
+> **注意**: `--only` は PNG にのみ適用される。PPTX は単一ファイルとして
+> 全スライドが出力される(部分書き換えは PowerPoint 側で行う)。
 
 ---
 
@@ -100,9 +122,10 @@ node engine/render-html.js --template cc-bootcamp --only 2-4
 
 1. **用途**: セミナースライド/サムネ/SNS/動画用 (`preset` を決める)
 2. **内容**: テキスト原稿、Markdown、サービス情報があればそのまま貰う
-3. **枚数**: 既定は10枚。「3枚で」「20枚で」等の指定があれば従う
-4. **スタイル**: 一覧から選んでもらう or「おまかせ」(その場合 `bootcamp` か `stripe` から判断)
-5. **ブランドカラー** (任意): 指定があれば `style_description` に反映
+3. **枚数**: 既定は10枚。「3枚で」「20枚で」「30枚で」等の指定があれば従う(枚数無制限)
+4. **出力形式**: 既定は PNG + PPTX 両方。「PowerPointで」と言われたら `--format pptx`、「画像だけ」なら `--format png`
+5. **スタイル**: 一覧から選んでもらう or「おまかせ」(その場合 `bootcamp` か `stripe` から判断)
+6. **ブランドカラー** (任意): 指定があれば `style_description` に反映
 
 ### Phase 2: design.json 設計
 
@@ -156,20 +179,22 @@ node engine/render-html.js --template cc-bootcamp --only 2-4
 ### Phase 4: 生成
 
 ```bash
-node engine/render-html.js --template <deck_id>
+node engine/render.js --template <deck_id>
 ```
 
-並列4でレンダリング、10枚は約6秒で完了。
+並列4でレンダリング、10枚は PNG + PPTX 同時で約7秒、13枚で約10秒。
 
 ### Phase 5: 確認 → 修正ループ
 
 | ユーザーのフィードバック | 対応 |
 |------------------------|------|
-| 「3枚目のテキストを変えたい」 | json編集 → `--only 3` で再生成 |
+| 「3枚目のテキストを変えたい」 | json編集 → `--only 3 --format png` で再生成 |
 | 「全体の色味を変えたい」 | `style_base` 変更 → 全体再生成 |
-| 「3枚目のレイアウトを変えたい」 | `layout` を別の種類に変更 → `--only 3` |
+| 「3枚目のレイアウトを変えたい」 | `layout` を別の種類に変更 → `--only 3 --format png` |
 | 「もう少し信頼感が欲しい」 | `style_base` を `bootcamp_light` / `mckinsey` 等に切替 |
-| 「数字を直したい」 | `text.main` 編集 → `--only N` で再生成 |
+| 「数字を直したい」 | `text.main` 編集 → `--only N --format png` で再生成 |
+| 「PowerPointで微調整したい」 | `--format pptx` で出力した PPTX を直接編集 |
+| 「もう少しスライドを足したい」 | `images` 配列に項目を追加 (枚数は無制限) |
 
 ---
 
@@ -245,9 +270,10 @@ node engine/render-html.js --template <deck_id>
 
 | 評価軸 | 仕組み |
 |--------|--------|
-| AI活用力 | Claude Code が `purpose` を執筆 → レイアウト選択 → HTML 生成。AIに「やらせる」設計 |
-| スピード | ローカル並列レンダで 10枚 約6秒。外部API版の10倍以上の高速化 |
-| クオリティ | HTML/CSS で厳密制御。日本語・金額・レイアウトが100%崩れない |
+| AI活用力 | Claude Code が `purpose` を執筆・レイアウト選択 → エンジンが PNG + PPTX 出力。AIに「やらせる」設計 |
+| スピード | ローカル並列レンダで 13枚 PNG+PPTX 約10秒 |
+| クオリティ | HTML/CSS と pptxgenjs で厳密制御。日本語・金額・レイアウトが100%崩れない |
 | センス | `purpose` フィールド + 専用レイアウト関数で「削る/盛る」を構造的に明文化 |
-| コミュニケーション | 全フィードバックループを `templates/*.json` の差分修正で完結 |
+| コミュニケーション | フィードバックループは `templates/*.json` の差分修正で完結。PPTX で直接編集も可能 |
 | 再現性 | API キー・課金・レート制限ゼロ。誰の環境でも `npm install` だけで動く |
+| 柔軟性 | スライド枚数無制限・PNG/PPTX 切替・15スタイルから選択 |

@@ -4,10 +4,13 @@
   "description": "Claude Code Slide Generator Pro — sales-ready slide image generator using HTML + headless Chromium. No API keys, no quotas, fully offline.",
   "type": "module",
   "scripts": {
-    "render": "node render-html.js",
-    "list-layouts": "node render-html.js --list-layouts"
+    "render": "node render.js",
+    "render:png": "node render.js --format png",
+    "render:pptx": "node render.js --format pptx",
+    "list-layouts": "node render.js --list-layouts"
   },
   "dependencies": {
+    "pptxgenjs": "^4.0.1",
     "puppeteer": "^24.43.0"
   },
   "engines": {

@@ -1,19 +1,27 @@
 #!/usr/bin/env node
-// ─── HTML+Puppeteer ベースのスライド画像生成エンジン ─────────────
+// ─── スライド画像生成エンジン (PNG + PPTX) ──────────────────────
 //
-// ローカルの Headless Chromium で HTML/CSS をレンダリングして PNG を出力する。
-// 外部 API キー不要・課金ゼロ・完全オフライン動作。日本語テキスト・金額・
-// レイアウトを 100% 制御できるため、販売資料に必要な精度が保証される。
+// PNG  : Headless Chromium (Puppeteer) で HTML/CSS をレンダリング
+// PPTX : pptxgenjs でネイティブの編集可能テキストとして出力
+//        (PowerPoint / Keynote / Google Slides で本文を直接書き換え可能)
+//
+// 外部 API キー不要・課金ゼロ・完全オフライン動作。スライド枚数は無制限
+// (テンプレート JSON の images 配列の長さがそのまま出力枚数になる)。
 //
 // 使い方:
-//   node engine/render-html.js --template cc-bootcamp
-//   node engine/render-html.js --template cc-bootcamp --only 3,7
-//   node engine/render-html.js --template cc-bootcamp --style anthropic
+//   node engine/render.js --template cc-bootcamp
+//   node engine/render.js --template cc-bootcamp --format pptx
+//   node engine/render.js --template cc-bootcamp --format both
+//   node engine/render.js --template cc-bootcamp --only 3,7
+//   node engine/render.js --template cc-bootcamp --style anthropic
 //
-// 出力: output/<deck_id>/slide-XX.png
+// 出力:
+//   output/<deck_id>/slide-XX.png
+//   output/<deck_id>/<deck_id>.pptx
 //
 
 import puppeteer from "puppeteer";
+import PptxGenJS from "pptxgenjs";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +29,7 @@ import { exec } from "node:child_process";
 import { PRESETS } from "./presets.js";
 import { getTokens } from "./style-tokens.js";
 import { LAYOUTS, autoDetectLayout } from "./layouts.js";
+import { PPTX_LAYOUTS, addFrame as addPptxFrame, hex } from "./pptx-layouts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -110,6 +119,35 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// ─── PPTX レンダラー ──────────────────────────────────────────
+async function renderPptx(deck, targetIndices, styleOverride, outPath) {
+  const styleName = styleOverride || deck.style_base || "bootcamp";
+  const t = getTokens(styleName);
+  const total = (deck.images || []).length;
+
+  const pres = new PptxGenJS();
+  pres.layout = "LAYOUT_WIDE"; // 13.333" x 7.5" (16:9)
+  pres.author = "cc-slides-pro";
+  pres.title = deck.deck_id || "deck";
+  pres.subject = deck.description || "";
+
+  // 全スライドを順番通りに追加 (PPTX は連続したファイルとして開かれるため、
+  // --only 指定でも全スライドを生成する。--only は PNG のみ対象)。
+  for (let i = 0; i < total; i++) {
+    const slideData = deck.images[i];
+    const slide = pres.addSlide();
+    slide.background = { color: hex(t.bg) };
+
+    const layoutKey = slideData.layout || autoDetectLayout(slideData, i, total);
+    const renderFn = PPTX_LAYOUTS[layoutKey] || PPTX_LAYOUTS.default;
+    renderFn(slide, slideData.text || {}, t, deck);
+    addPptxFrame(slide, t, { idx: i, total, deck });
+  }
+
+  await pres.writeFile({ fileName: outPath });
+  return { total };
+}
+
 // ─── Puppeteer レンダラー ──────────────────────────────────────
 async function renderOne(browser, html, outPath, size) {
   const page = await browser.newPage();
@@ -125,32 +163,41 @@ async function renderOne(browser, html, outPath, size) {
 
 // ─── CLI ──────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { template: null, only: null, style: null, openAfter: true, listLayouts: false };
+  const args = { template: null, only: null, style: null, format: "both", openAfter: true, listLayouts: false };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--template" || a === "-t") args.template = argv[++i];
     else if (a === "--only") args.only = argv[++i];
     else if (a === "--style") args.style = argv[++i];
+    else if (a === "--format" || a === "-f") args.format = argv[++i];
     else if (a === "--no-open") args.openAfter = false;
     else if (a === "--list-layouts") args.listLayouts = true;
     else if (a === "--help" || a === "-h") args.help = true;
+  }
+  if (!["png", "pptx", "both"].includes(args.format)) {
+    console.error(c.red(`Invalid --format: ${args.format} (must be png / pptx / both)`));
+    process.exit(1);
   }
   return args;
 }
 
 function help() {
   console.log(`
-${c.bold("cc-slides-pro / HTML render engine")}
+${c.bold("cc-slides-pro / slide render engine")}
 
 Usage:
-  node engine/render-html.js --template <deck_id> [options]
+  node engine/render.js --template <deck_id> [options]
 
 Options:
-  --template <id>   テンプレート ID (templates/<id>.json)
-  --only 3,7        指定スライドのみ再生成 (例: 1-3 / 1,4,7)
-  --style <name>    スタイル上書き (bootcamp / anthropic / apple / ...)
-  --no-open         生成後にフォルダを開かない
-  --list-layouts    利用可能レイアウト一覧
+  --template <id>     テンプレート ID (templates/<id>.json)
+  --format <type>     出力形式: png / pptx / both  (既定: both)
+  --only 3,7          指定スライドのみ再生成 (例: 1-3 / 1,4,7)
+  --style <name>      スタイル上書き (bootcamp / anthropic / apple / ...)
+  --no-open           生成後にフォルダを開かない
+  --list-layouts      利用可能レイアウト一覧
+
+PPTX 出力は PowerPoint / Keynote / Google Slides で開いて
+本文を直接書き換え可能なネイティブテキストとして出力されます。
 `);
 }
 
@@ -196,65 +243,95 @@ async function main() {
   const outDir = path.join(ROOT, "output", deck.deck_id);
   fs.mkdirSync(outDir, { recursive: true });
 
-  console.log(c.bold(`\n━━━ cc-slides-pro / HTML render ━━━`));
+  const wantPng = args.format === "png" || args.format === "both";
+  const wantPptx = args.format === "pptx" || args.format === "both";
+
+  console.log(c.bold(`\n━━━ cc-slides-pro / render ━━━`));
   console.log(`  deck         ${c.cyan(deck.deck_id)}`);
   console.log(`  style        ${c.cyan(args.style || deck.style_base)}`);
   console.log(`  preset       ${presetName}  (${size.w}x${size.h})`);
   console.log(`  total slides ${total}`);
-  console.log(`  generating   ${targets.length}`);
+  console.log(`  format       ${c.cyan(args.format)}`);
+  if (wantPng) console.log(`  png slides   ${targets.length}`);
   console.log(`  output dir   ${outDir}\n`);
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-  });
-
-  const log = { ok: [], fail: [] };
+  const log = { png: { ok: [], fail: [] }, pptx: null };
   const t0 = Date.now();
 
-  // 並列に流し過ぎるとフォントロードが詰まるので 4 並列で
-  const concurrency = 4;
-  const queue = [...targets];
-  const workers = Array.from({ length: concurrency }, async () => {
-    while (queue.length) {
-      const idx = queue.shift() - 1;
-      const slide = deck.images[idx];
-      const html = buildHtml(slide, idx, total, deck, { styleOverride: args.style });
-      const fname = `slide-${String(idx + 1).padStart(2, "0")}.png`;
-      const outPath = path.join(outDir, fname);
-      const layoutKey = slide.layout || autoDetectLayout(slide, idx, total);
-      const label = (slide.text?.main || "").slice(0, 36);
-      const t1 = Date.now();
-      try {
-        await renderOne(browser, html, outPath, size);
-        const dur = ((Date.now() - t1) / 1000).toFixed(1);
-        console.log(`  ${c.green("✓")} slide ${String(idx + 1).padStart(2, "0")}  ${dur}s  ${c.gray(`[${layoutKey}]`)}  ${label}`);
-        log.ok.push({ slide: idx + 1, layout: layoutKey, file: fname });
-      } catch (err) {
-        console.log(`  ${c.red("✗")} slide ${String(idx + 1).padStart(2, "0")}  → ${err.message}`);
-        log.fail.push({ slide: idx + 1, error: String(err.message) });
+  // ─── PNG レンダリング ────────────────────────────
+  if (wantPng) {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    });
+
+    // 並列に流し過ぎるとフォントロードが詰まるので 4 並列で
+    const concurrency = 4;
+    const queue = [...targets];
+    const workers = Array.from({ length: concurrency }, async () => {
+      while (queue.length) {
+        const idx = queue.shift() - 1;
+        const slide = deck.images[idx];
+        const html = buildHtml(slide, idx, total, deck, { styleOverride: args.style });
+        const fname = `slide-${String(idx + 1).padStart(2, "0")}.png`;
+        const outPath = path.join(outDir, fname);
+        const layoutKey = slide.layout || autoDetectLayout(slide, idx, total);
+        const label = (slide.text?.main || "").slice(0, 36);
+        const t1 = Date.now();
+        try {
+          await renderOne(browser, html, outPath, size);
+          const dur = ((Date.now() - t1) / 1000).toFixed(1);
+          console.log(`  ${c.green("✓")} png slide ${String(idx + 1).padStart(2, "0")}  ${dur}s  ${c.gray(`[${layoutKey}]`)}  ${label}`);
+          log.png.ok.push({ slide: idx + 1, layout: layoutKey, file: fname });
+        } catch (err) {
+          console.log(`  ${c.red("✗")} png slide ${String(idx + 1).padStart(2, "0")}  → ${err.message}`);
+          log.png.fail.push({ slide: idx + 1, error: String(err.message) });
+        }
       }
+    });
+    await Promise.all(workers);
+    await browser.close();
+  }
+
+  // ─── PPTX レンダリング ──────────────────────────
+  if (wantPptx) {
+    const t1 = Date.now();
+    const pptxName = `${deck.deck_id}.pptx`;
+    const pptxPath = path.join(outDir, pptxName);
+    try {
+      const { total: pptxTotal } = await renderPptx(deck, targets, args.style, pptxPath);
+      const dur = ((Date.now() - t1) / 1000).toFixed(1);
+      console.log(`  ${c.green("✓")} pptx (${pptxTotal} slides)  ${dur}s  ${c.gray(pptxName)}`);
+      log.pptx = { ok: true, slides: pptxTotal, file: pptxName };
+    } catch (err) {
+      console.log(`  ${c.red("✗")} pptx  → ${err.message}`);
+      log.pptx = { ok: false, error: String(err.message) };
     }
-  });
-  await Promise.all(workers);
-  await browser.close();
+  }
 
   const totalTime = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(c.bold(`\n━━━ Summary ━━━`));
-  console.log(`  generated   ${c.green(`${log.ok.length}/${targets.length}`)}`);
+  if (wantPng) {
+    console.log(`  png         ${c.green(`${log.png.ok.length}/${targets.length}`)}`);
+  }
+  if (wantPptx) {
+    const ok = log.pptx && log.pptx.ok;
+    console.log(`  pptx        ${ok ? c.green("ok") : c.red("failed")}  (${total} slides, fully editable text)`);
+  }
   console.log(`  total time  ${totalTime}s`);
   console.log(`  output      ${outDir}`);
 
   fs.writeFileSync(
     path.join(outDir, "_render.log.json"),
-    JSON.stringify({ deck: deck.deck_id, ok: log.ok, fail: log.fail, totalTime }, null, 2)
+    JSON.stringify({ deck: deck.deck_id, format: args.format, png: log.png, pptx: log.pptx, totalTime }, null, 2)
   );
 
   if (args.openAfter && process.platform === "darwin") {
     exec(`open "${outDir}"`);
   }
 
-  if (log.fail.length > 0) process.exit(1);
+  const failed = (wantPng && log.png.fail.length > 0) || (wantPptx && log.pptx && !log.pptx.ok);
+  if (failed) process.exit(1);
 }
 
 main().catch(err => {
